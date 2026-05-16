@@ -10,8 +10,8 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+  import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ 
   const firebaseConfig = {
     apiKey: "AIzaSyDLfuILR0OJh1toZrPJijOIfqsdVPj4CXI",
     authDomain: "nameworld.firebaseapp.com",
@@ -20,30 +20,27 @@
     messagingSenderId: "883101372944",
     appId: "1:883101372944:web:89620be886839c2da63095"
   };
-
+ 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
-  // Make db and functions available globally
+ 
   window._db = db;
   window._addDoc = addDoc;
   window._collection = collection;
   window._onSnapshot = onSnapshot;
   window._query = query;
+  window._where = where;
+  window._getDocs = getDocs;
   window._firebaseReady = true;
-
-  // Start listening for name submissions in real time
-  window.addEventListener('load', () => {
-    startListening();
-  });
-
+ 
+  window.addEventListener('load', () => { startListening(); });
+ 
   function startListening() {
     const q = query(collection(db, "names"));
     onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const data = change.doc.data();
-          // Add to local nameData
           if (!window.nameData[data.country]) window.nameData[data.country] = {};
           if (!window.nameData[data.country][data.name]) window.nameData[data.country][data.name] = 0;
           window.nameData[data.country][data.name]++;
@@ -68,16 +65,16 @@
     --border: #e0d8cc;
     --shadow: 0 4px 24px rgba(0,0,0,0.10);
   }
-
+ 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--cream);
     color: var(--ink);
     min-height: 100vh;
   }
-
+ 
   header {
     background: var(--ink);
     color: var(--cream);
@@ -91,325 +88,224 @@
     z-index: 1000;
     box-shadow: 0 2px 20px rgba(0,0,0,0.3);
   }
-
-  .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.6rem;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-  }
+ 
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; }
   .logo span { color: var(--gold); }
-
+ 
   .header-right { display: flex; align-items: center; gap: 1rem; }
-
+ 
   .live-badge {
     display: flex; align-items: center; gap: 6px;
     background: rgba(200,168,75,0.15);
     border: 1px solid var(--gold);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--gold);
-    letter-spacing: 0.5px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 500; color: var(--gold); letter-spacing: 0.5px;
   }
-  .live-dot {
-    width: 7px; height: 7px;
-    background: #2ecc71;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-  }
-  @keyframes pulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-
+  .live-dot { width: 7px; height: 7px; background: #2ecc71; border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+ 
   .add-name-btn {
-    background: var(--gold);
-    color: var(--ink);
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
+    background: var(--gold); color: var(--ink); border: none;
+    padding: 8px 20px; border-radius: 6px;
+    font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.2s;
   }
   .add-name-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
-
+ 
   .stats-bar {
-    background: var(--ink);
-    border-top: 1px solid #222;
-    padding: 8px 2rem;
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
+    background: var(--ink); border-top: 1px solid #222;
+    padding: 8px 2rem; display: flex; gap: 2rem; justify-content: center;
   }
-  .stat {
-    color: #aaa;
-    font-size: 0.8rem;
-    display: flex; align-items: center; gap: 6px;
-  }
+  .stat { color: #aaa; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
   .stat strong { color: var(--gold); font-size: 1rem; }
-
+ 
   .main {
     display: grid;
     grid-template-columns: 320px 1fr;
     height: calc(100vh - 64px - 38px);
   }
-
+ 
   .sidebar {
-    background: var(--card);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    background: var(--card); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
   }
-
-  .sidebar-header {
-    padding: 1.2rem 1.2rem 0.8rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0.6rem;
-  }
-
+ 
+  .sidebar-header { padding: 1.2rem 1.2rem 0.8rem; border-bottom: 1px solid var(--border); }
+  .sidebar-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
+ 
   .search-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
   }
   .search-box input {
-    border: none;
-    background: transparent;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    width: 100%;
-    outline: none;
-    color: var(--ink);
+    border: none; background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    width: 100%; outline: none; color: var(--ink);
   }
   .search-box svg { flex-shrink: 0; opacity: 0.4; }
-
+ 
   .region-filter {
-    padding: 0.8rem 1.2rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+    padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border);
+    display: flex; gap: 6px; flex-wrap: wrap;
   }
   .region-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 0.75rem;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--ink);
+    background: none; border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 12px; font-size: 0.75rem;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; color: var(--ink);
   }
   .region-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
   .region-btn:hover:not(.active) { background: var(--cream); }
-
-  .country-list {
-    overflow-y: auto;
-    flex: 1;
-    padding: 0.5rem;
-  }
+ 
+  .country-list { overflow-y: auto; flex: 1; padding: 0.5rem; }
   .country-list::-webkit-scrollbar { width: 4px; }
   .country-list::-webkit-scrollbar-track { background: transparent; }
   .country-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
+ 
   .country-card {
-    border-radius: 10px;
-    padding: 0.9rem;
-    margin-bottom: 6px;
-    cursor: pointer;
-    transition: all 0.15s;
-    border: 1px solid transparent;
+    border-radius: 10px; padding: 0.9rem; margin-bottom: 6px;
+    cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
   }
   .country-card:hover { background: var(--cream); border-color: var(--border); }
   .country-card.selected { background: #fff8ec; border-color: var(--gold); }
-
-  .country-card-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
+ 
+  .country-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .flag { font-size: 1.4rem; }
   .country-name { font-weight: 500; font-size: 0.9rem; flex: 1; }
   .count-badge {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 2px 8px;
-    font-size: 0.7rem;
-    color: #666;
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2px 8px; font-size: 0.7rem; color: #666;
   }
-
+ 
   .top-names { display: flex; flex-wrap: wrap; gap: 4px; }
   .name-chip {
-    background: var(--ink);
-    color: var(--cream);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.72rem;
-    font-weight: 500;
+    background: var(--ink); color: var(--cream);
+    border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 500;
   }
   .name-chip.rank-1 { background: var(--gold); color: var(--ink); }
   .name-chip.rank-2 { background: #888; }
   .name-chip.rank-3 { background: #a0785a; }
-
+ 
   #map { width: 100%; height: 100%; z-index: 1; }
-
+ 
   .detail-panel {
-    position: absolute;
-    top: 80px;
-    right: 20px;
-    width: 280px;
-    background: white;
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-    z-index: 500;
-    display: none;
-    animation: slideIn 0.2s ease;
-    border: 1px solid var(--border);
+    position: absolute; top: 80px; right: 20px; width: 280px;
+    background: white; border-radius: 14px; box-shadow: var(--shadow);
+    z-index: 500; display: none; animation: slideIn 0.2s ease; border: 1px solid var(--border);
   }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
+  @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
   .detail-panel.visible { display: block; }
-
+ 
   .detail-header {
-    background: var(--ink);
-    color: var(--cream);
-    padding: 1rem 1.2rem;
-    border-radius: 14px 14px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: var(--ink); color: var(--cream); padding: 1rem 1.2rem;
+    border-radius: 14px 14px 0 0; display: flex; justify-content: space-between; align-items: center;
   }
   .detail-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
   .close-btn { background: none; border: none; color: #aaa; cursor: pointer; font-size: 1.2rem; line-height: 1; transition: color 0.15s; }
   .close-btn:hover { color: white; }
-
+ 
   .detail-body { padding: 1rem; }
-
+ 
   .rank-list { list-style: none; }
   .rank-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 6px;
-    border-bottom: 1px solid var(--cream);
-    transition: background 0.1s;
-    border-radius: 6px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; border-bottom: 1px solid var(--cream);
+    transition: background 0.1s; border-radius: 6px;
   }
   .rank-item:last-child { border-bottom: none; }
   .rank-item:hover { background: var(--cream); }
   .rank-num {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: #eee;
+    width: 24px; height: 24px; border-radius: 50%; background: #eee;
     display: flex; align-items: center; justify-content: center;
     font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
   }
   .rank-num.r1 { background: var(--gold); color: var(--ink); }
   .rank-num.r2 { background: #bbb; color: white; }
   .rank-num.r3 { background: #c8956a; color: white; }
-
+ 
   .rank-name { font-weight: 500; font-size: 0.9rem; flex: 1; }
   .rank-bar-wrap { width: 60px; }
   .rank-bar { height: 4px; background: var(--gold); border-radius: 2px; transition: width 0.4s; }
   .rank-count { font-size: 0.75rem; color: #888; width: 28px; text-align: right; }
-
+ 
+  /* Cooldown banner */
+  .cooldown-banner {
+    background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 12px; font-size: 0.83rem; color: #7a5c00;
+    display: none; align-items: center; gap: 8px;
+  }
+  .cooldown-banner.visible { display: flex; }
+ 
   .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.2s;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 2000; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-
+ 
   .modal {
-    background: white;
-    border-radius: 16px;
-    width: 420px;
-    max-width: 95vw;
-    overflow: hidden;
-    transform: translateY(20px);
-    transition: transform 0.2s;
+    background: white; border-radius: 16px; width: 420px; max-width: 95vw;
+    overflow: hidden; transform: translateY(20px); transition: transform 0.2s;
   }
   .modal-overlay.open .modal { transform: translateY(0); }
-
+ 
   .modal-header { background: var(--ink); padding: 1.5rem; color: var(--cream); }
   .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
   .modal-header p { color: #aaa; font-size: 0.85rem; }
-
+ 
   .modal-body { padding: 1.5rem; }
-
+ 
   .form-group { margin-bottom: 1rem; }
   .form-group label {
     display: block; font-size: 0.8rem; font-weight: 500;
-    margin-bottom: 6px; color: #555;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;
   }
   .form-group input, .form-group select {
-    width: 100%; border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
-    outline: none; transition: border-color 0.15s;
-    background: var(--cream); color: var(--ink);
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    outline: none; transition: border-color 0.15s; background: var(--cream); color: var(--ink);
   }
   .form-group input:focus, .form-group select:focus { border-color: var(--gold); background: white; }
-
+  .form-group input.error { border-color: var(--rust); }
+ 
+  .field-error { color: var(--rust); font-size: 0.75rem; margin-top: 4px; display: none; }
+  .field-error.visible { display: block; }
+ 
   .submit-btn {
-    width: 100%; background: var(--ink); color: var(--cream);
-    border: none; padding: 12px; border-radius: 8px;
-    font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 1rem;
-    cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+    width: 100%; background: var(--ink); color: var(--cream); border: none;
+    padding: 12px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+    font-weight: 500; font-size: 1rem; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
   }
   .submit-btn:hover { background: #222; transform: translateY(-1px); }
   .submit-btn:disabled { background: #aaa; cursor: not-allowed; transform: none; }
-
+ 
   .cancel-link { display: block; text-align: center; margin-top: 0.8rem; color: #888; font-size: 0.85rem; cursor: pointer; }
   .cancel-link:hover { color: var(--ink); }
-
+ 
+  .rules-note { font-size: 0.75rem; color: #aaa; margin-top: 10px; text-align: center; line-height: 1.5; }
+ 
   .toast {
     position: fixed; bottom: 30px; left: 50%;
     transform: translateX(-50%) translateY(80px);
     background: var(--ink); color: var(--cream);
-    padding: 12px 24px; border-radius: 30px;
-    font-size: 0.9rem; z-index: 3000;
+    padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; z-index: 3000;
     transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
     pointer-events: none; border: 1px solid var(--gold);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
-
+  .toast.error-toast { border-color: var(--rust); }
+ 
   .no-results { padding: 2rem; text-align: center; color: #aaa; font-size: 0.9rem; }
   .search-results { padding: 0.5rem; }
   .search-result-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.1s; border-bottom: 1px solid var(--cream); }
   .search-result-item:hover { background: var(--cream); }
   .sr-name { font-weight: 600; font-size: 0.95rem; }
   .sr-locs { font-size: 0.78rem; color: #888; margin-top: 2px; }
-
+ 
   .leaflet-popup-content-wrapper { border-radius: 10px !important; box-shadow: var(--shadow) !important; padding: 0 !important; overflow: hidden; }
   .leaflet-popup-content { margin: 0 !important; }
   .popup-inner { padding: 12px 14px; min-width: 150px; }
-
+ 
   @media (max-width: 700px) {
     .main { grid-template-columns: 1fr; grid-template-rows: 45vh 1fr; }
     .sidebar { order: 2; height: 100%; }
@@ -420,7 +316,7 @@
 </style>
 </head>
 <body>
-
+ 
 <header>
   <div class="logo">Name<span>World</span></div>
   <div class="header-right">
@@ -428,13 +324,13 @@
     <button class="add-name-btn" onclick="openModal()">+ Add My Name</button>
   </div>
 </header>
-
+ 
 <div class="stats-bar">
   <div class="stat"><strong id="totalNames">0</strong> names submitted</div>
   <div class="stat"><strong id="totalCountries">0</strong> countries represented</div>
   <div class="stat"><strong id="todayCount">0</strong> added today</div>
 </div>
-
+ 
 <div class="main" style="position:relative;">
   <div class="sidebar">
     <div class="sidebar-header">
@@ -451,10 +347,11 @@
       <button class="region-btn" onclick="filterRegion('Asia', this)">Asia</button>
       <button class="region-btn" onclick="filterRegion('Africa', this)">Africa</button>
       <button class="region-btn" onclick="filterRegion('Oceania', this)">Oceania</button>
+      <button class="region-btn" onclick="filterRegion('Middle East', this)">Middle East</button>
     </div>
     <div class="country-list" id="countryList"></div>
   </div>
-
+ 
   <div style="position:relative; flex:1;">
     <div id="map"></div>
     <div class="detail-panel" id="detailPanel">
@@ -472,7 +369,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -481,9 +378,13 @@
       <p>Help us map the world's names — one person at a time</p>
     </div>
     <div class="modal-body">
+      <div class="cooldown-banner" id="cooldownBanner">
+        ⏳ <span id="cooldownMsg">You can submit again soon.</span>
+      </div>
       <div class="form-group">
         <label>Your First Name</label>
         <input type="text" id="nameInput" placeholder="e.g. Maria, James, Yuki…" maxlength="40">
+        <div class="field-error" id="nameError">Please enter a valid name (letters only, 2–40 chars)</div>
       </div>
       <div class="form-group">
         <label>Your Country</label>
@@ -495,58 +396,250 @@
       </div>
       <button class="submit-btn" id="submitBtn" onclick="submitName()">🌍 Add My Name to the Map</button>
       <div class="cancel-link" onclick="closeModal()">Cancel</div>
+      <div class="rules-note">⚠️ One submission per hour per device. Names must be real first names only.</div>
     </div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
-
+ 
 <script>
+// ─── ANTI-SPAM CONFIG ───────────────────────────────────────────
+const COOLDOWN_MS = 60 * 60 * 1000;   // 1 hour between submissions
+const MAX_PER_DAY = 3;                  // max 3 submissions per day per device
+const NAME_REGEX = /^[a-zA-ZÀ-ÖØ-öø-ÿ' \-]{2,40}$/; // real name characters
+ 
+function getSpamState() {
+  try {
+    return JSON.parse(localStorage.getItem('nw_spam') || '{}');
+  } catch { return {}; }
+}
+function saveSpamState(state) {
+  localStorage.setItem('nw_spam', JSON.stringify(state));
+}
+ 
+function checkCooldown() {
+  const state = getSpamState();
+  const now = Date.now();
+  const today = new Date().toDateString();
+ 
+  // Reset daily count if new day
+  if (state.date !== today) {
+    state.date = today;
+    state.dailyCount = 0;
+  }
+ 
+  const timeSinceLast = now - (state.lastSubmit || 0);
+  const cooldownLeft = COOLDOWN_MS - timeSinceLast;
+ 
+  return {
+    blocked: cooldownLeft > 0 || (state.dailyCount || 0) >= MAX_PER_DAY,
+    cooldownLeft: Math.max(0, cooldownLeft),
+    dailyCount: state.dailyCount || 0,
+    dailyLeft: MAX_PER_DAY - (state.dailyCount || 0),
+    dailyMaxed: (state.dailyCount || 0) >= MAX_PER_DAY
+  };
+}
+ 
+function recordSubmission() {
+  const state = getSpamState();
+  const today = new Date().toDateString();
+  if (state.date !== today) { state.date = today; state.dailyCount = 0; }
+  state.lastSubmit = Date.now();
+  state.dailyCount = (state.dailyCount || 0) + 1;
+  saveSpamState(state);
+}
+ 
+function formatTime(ms) {
+  const m = Math.ceil(ms / 60000);
+  if (m < 60) return `${m} minute${m !== 1 ? 's' : ''}`;
+  const h = Math.floor(m / 60), rem = m % 60;
+  return rem ? `${h}h ${rem}m` : `${h} hour${h !== 1 ? 's' : ''}`;
+}
+ 
+function updateCooldownBanner() {
+  const banner = document.getElementById('cooldownBanner');
+  const msg = document.getElementById('cooldownMsg');
+  const btn = document.getElementById('submitBtn');
+  const check = checkCooldown();
+ 
+  if (check.dailyMaxed) {
+    banner.classList.add('visible');
+    msg.textContent = `Daily limit reached (${MAX_PER_DAY}/${MAX_PER_DAY}). Come back tomorrow!`;
+    btn.disabled = true;
+    return;
+  }
+  if (check.cooldownLeft > 0) {
+    banner.classList.add('visible');
+    msg.textContent = `Please wait ${formatTime(check.cooldownLeft)} before submitting again.`;
+    btn.disabled = true;
+    return;
+  }
+  banner.classList.remove('visible');
+  btn.disabled = false;
+}
+ 
+// ─── COUNTRIES (150+) ────────────────────────────────────────────
 const COUNTRIES = [
+  // Americas
   { name:"United States", flag:"🇺🇸", region:"Americas", lat:37.09, lng:-95.71 },
-  { name:"United Kingdom", flag:"🇬🇧", region:"Europe", lat:55.37, lng:-3.43 },
   { name:"Canada", flag:"🇨🇦", region:"Americas", lat:56.13, lng:-106.34 },
-  { name:"Australia", flag:"🇦🇺", region:"Oceania", lat:-25.27, lng:133.77 },
+  { name:"Mexico", flag:"🇲🇽", region:"Americas", lat:23.63, lng:-102.55 },
+  { name:"Brazil", flag:"🇧🇷", region:"Americas", lat:-14.23, lng:-51.92 },
+  { name:"Argentina", flag:"🇦🇷", region:"Americas", lat:-38.41, lng:-63.61 },
+  { name:"Colombia", flag:"🇨🇴", region:"Americas", lat:4.57, lng:-74.29 },
+  { name:"Chile", flag:"🇨🇱", region:"Americas", lat:-35.67, lng:-71.54 },
+  { name:"Peru", flag:"🇵🇪", region:"Americas", lat:-9.18, lng:-75.01 },
+  { name:"Venezuela", flag:"🇻🇪", region:"Americas", lat:6.42, lng:-66.58 },
+  { name:"Ecuador", flag:"🇪🇨", region:"Americas", lat:-1.83, lng:-78.18 },
+  { name:"Bolivia", flag:"🇧🇴", region:"Americas", lat:-16.29, lng:-63.58 },
+  { name:"Paraguay", flag:"🇵🇾", region:"Americas", lat:-23.44, lng:-58.44 },
+  { name:"Uruguay", flag:"🇺🇾", region:"Americas", lat:-32.52, lng:-55.76 },
+  { name:"Cuba", flag:"🇨🇺", region:"Americas", lat:21.52, lng:-77.78 },
+  { name:"Dominican Republic", flag:"🇩🇴", region:"Americas", lat:18.73, lng:-70.16 },
+  { name:"Guatemala", flag:"🇬🇹", region:"Americas", lat:15.78, lng:-90.23 },
+  { name:"Honduras", flag:"🇭🇳", region:"Americas", lat:15.19, lng:-86.24 },
+  { name:"El Salvador", flag:"🇸🇻", region:"Americas", lat:13.79, lng:-88.89 },
+  { name:"Nicaragua", flag:"🇳🇮", region:"Americas", lat:12.86, lng:-85.20 },
+  { name:"Costa Rica", flag:"🇨🇷", region:"Americas", lat:9.74, lng:-83.75 },
+  { name:"Panama", flag:"🇵🇦", region:"Americas", lat:8.53, lng:-80.78 },
+  { name:"Jamaica", flag:"🇯🇲", region:"Americas", lat:18.10, lng:-77.29 },
+  { name:"Haiti", flag:"🇭🇹", region:"Americas", lat:18.97, lng:-72.28 },
+  { name:"Trinidad and Tobago", flag:"🇹🇹", region:"Americas", lat:10.69, lng:-61.22 },
+  // Europe
+  { name:"United Kingdom", flag:"🇬🇧", region:"Europe", lat:55.37, lng:-3.43 },
   { name:"Germany", flag:"🇩🇪", region:"Europe", lat:51.16, lng:10.45 },
   { name:"France", flag:"🇫🇷", region:"Europe", lat:46.22, lng:2.21 },
   { name:"Spain", flag:"🇪🇸", region:"Europe", lat:40.46, lng:-3.74 },
   { name:"Italy", flag:"🇮🇹", region:"Europe", lat:41.87, lng:12.56 },
-  { name:"Japan", flag:"🇯🇵", region:"Asia", lat:36.20, lng:138.25 },
-  { name:"India", flag:"🇮🇳", region:"Asia", lat:20.59, lng:78.96 },
-  { name:"China", flag:"🇨🇳", region:"Asia", lat:35.86, lng:104.19 },
-  { name:"Brazil", flag:"🇧🇷", region:"Americas", lat:-14.23, lng:-51.92 },
-  { name:"Mexico", flag:"🇲🇽", region:"Americas", lat:23.63, lng:-102.55 },
-  { name:"South Korea", flag:"🇰🇷", region:"Asia", lat:35.90, lng:127.76 },
-  { name:"Nigeria", flag:"🇳🇬", region:"Africa", lat:9.08, lng:8.67 },
-  { name:"South Africa", flag:"🇿🇦", region:"Africa", lat:-30.55, lng:22.93 },
-  { name:"Egypt", flag:"🇪🇬", region:"Africa", lat:26.82, lng:30.80 },
-  { name:"Philippines", flag:"🇵🇭", region:"Asia", lat:12.87, lng:121.77 },
-  { name:"Indonesia", flag:"🇮🇩", region:"Asia", lat:-0.78, lng:113.92 },
   { name:"Netherlands", flag:"🇳🇱", region:"Europe", lat:52.13, lng:5.29 },
   { name:"Sweden", flag:"🇸🇪", region:"Europe", lat:60.12, lng:18.64 },
   { name:"Poland", flag:"🇵🇱", region:"Europe", lat:51.91, lng:19.14 },
-  { name:"Argentina", flag:"🇦🇷", region:"Americas", lat:-38.41, lng:-63.61 },
-  { name:"Turkey", flag:"🇹🇷", region:"Asia", lat:38.96, lng:35.24 },
-  { name:"Pakistan", flag:"🇵🇰", region:"Asia", lat:30.37, lng:69.34 },
-  { name:"Kenya", flag:"🇰🇪", region:"Africa", lat:-0.02, lng:37.90 },
-  { name:"Ghana", flag:"🇬🇭", region:"Africa", lat:7.95, lng:-1.02 },
-  { name:"New Zealand", flag:"🇳🇿", region:"Oceania", lat:-40.90, lng:174.88 },
   { name:"Portugal", flag:"🇵🇹", region:"Europe", lat:39.39, lng:-8.22 },
   { name:"Greece", flag:"🇬🇷", region:"Europe", lat:39.07, lng:21.82 },
+  { name:"Belgium", flag:"🇧🇪", region:"Europe", lat:50.50, lng:4.46 },
+  { name:"Switzerland", flag:"🇨🇭", region:"Europe", lat:46.81, lng:8.22 },
+  { name:"Austria", flag:"🇦🇹", region:"Europe", lat:47.51, lng:14.55 },
+  { name:"Norway", flag:"🇳🇴", region:"Europe", lat:60.47, lng:8.46 },
+  { name:"Denmark", flag:"🇩🇰", region:"Europe", lat:56.26, lng:9.50 },
+  { name:"Finland", flag:"🇫🇮", region:"Europe", lat:61.92, lng:25.74 },
+  { name:"Czech Republic", flag:"🇨🇿", region:"Europe", lat:49.81, lng:15.47 },
+  { name:"Romania", flag:"🇷🇴", region:"Europe", lat:45.94, lng:24.96 },
+  { name:"Hungary", flag:"🇭🇺", region:"Europe", lat:47.16, lng:19.50 },
+  { name:"Ukraine", flag:"🇺🇦", region:"Europe", lat:48.37, lng:31.16 },
+  { name:"Russia", flag:"🇷🇺", region:"Europe", lat:61.52, lng:105.31 },
+  { name:"Serbia", flag:"🇷🇸", region:"Europe", lat:44.01, lng:21.00 },
+  { name:"Croatia", flag:"🇭🇷", region:"Europe", lat:45.10, lng:15.20 },
+  { name:"Slovakia", flag:"🇸🇰", region:"Europe", lat:48.66, lng:19.69 },
+  { name:"Bulgaria", flag:"🇧🇬", region:"Europe", lat:42.73, lng:25.48 },
+  { name:"Ireland", flag:"🇮🇪", region:"Europe", lat:53.41, lng:-8.24 },
+  { name:"Lithuania", flag:"🇱🇹", region:"Europe", lat:55.16, lng:23.88 },
+  { name:"Latvia", flag:"🇱🇻", region:"Europe", lat:56.87, lng:24.60 },
+  { name:"Estonia", flag:"🇪🇪", region:"Europe", lat:58.59, lng:25.01 },
+  { name:"Slovenia", flag:"🇸🇮", region:"Europe", lat:46.15, lng:14.99 },
+  { name:"Albania", flag:"🇦🇱", region:"Europe", lat:41.15, lng:20.16 },
+  { name:"North Macedonia", flag:"🇲🇰", region:"Europe", lat:41.60, lng:21.74 },
+  { name:"Bosnia and Herzegovina", flag:"🇧🇦", region:"Europe", lat:43.91, lng:17.67 },
+  { name:"Moldova", flag:"🇲🇩", region:"Europe", lat:47.41, lng:28.36 },
+  { name:"Belarus", flag:"🇧🇾", region:"Europe", lat:53.70, lng:27.95 },
+  // Asia
+  { name:"India", flag:"🇮🇳", region:"Asia", lat:20.59, lng:78.96 },
+  { name:"China", flag:"🇨🇳", region:"Asia", lat:35.86, lng:104.19 },
+  { name:"Japan", flag:"🇯🇵", region:"Asia", lat:36.20, lng:138.25 },
+  { name:"South Korea", flag:"🇰🇷", region:"Asia", lat:35.90, lng:127.76 },
+  { name:"Philippines", flag:"🇵🇭", region:"Asia", lat:12.87, lng:121.77 },
+  { name:"Indonesia", flag:"🇮🇩", region:"Asia", lat:-0.78, lng:113.92 },
+  { name:"Vietnam", flag:"🇻🇳", region:"Asia", lat:14.05, lng:108.27 },
+  { name:"Thailand", flag:"🇹🇭", region:"Asia", lat:15.87, lng:100.99 },
+  { name:"Malaysia", flag:"🇲🇾", region:"Asia", lat:4.21, lng:101.97 },
+  { name:"Singapore", flag:"🇸🇬", region:"Asia", lat:1.35, lng:103.82 },
+  { name:"Bangladesh", flag:"🇧🇩", region:"Asia", lat:23.68, lng:90.35 },
+  { name:"Sri Lanka", flag:"🇱🇰", region:"Asia", lat:7.87, lng:80.77 },
+  { name:"Nepal", flag:"🇳🇵", region:"Asia", lat:28.39, lng:84.12 },
+  { name:"Myanmar", flag:"🇲🇲", region:"Asia", lat:21.91, lng:95.95 },
+  { name:"Cambodia", flag:"🇰🇭", region:"Asia", lat:12.56, lng:104.99 },
+  { name:"Mongolia", flag:"🇲🇳", region:"Asia", lat:46.86, lng:103.84 },
+  { name:"North Korea", flag:"🇰🇵", region:"Asia", lat:40.33, lng:127.51 },
+  { name:"Taiwan", flag:"🇹🇼", region:"Asia", lat:23.69, lng:120.96 },
+  { name:"Hong Kong", flag:"🇭🇰", region:"Asia", lat:22.39, lng:114.10 },
+  { name:"Laos", flag:"🇱🇦", region:"Asia", lat:19.85, lng:102.49 },
+  { name:"Brunei", flag:"🇧🇳", region:"Asia", lat:4.53, lng:114.72 },
+  { name:"Timor-Leste", flag:"🇹🇱", region:"Asia", lat:-8.87, lng:125.73 },
+  { name:"Kazakhstan", flag:"🇰🇿", region:"Asia", lat:48.01, lng:66.92 },
+  { name:"Uzbekistan", flag:"🇺🇿", region:"Asia", lat:41.37, lng:64.58 },
+  { name:"Afghanistan", flag:"🇦🇫", region:"Asia", lat:33.93, lng:67.71 },
+  { name:"Pakistan", flag:"🇵🇰", region:"Asia", lat:30.37, lng:69.34 },
+  // Middle East
+  { name:"Turkey", flag:"🇹🇷", region:"Middle East", lat:38.96, lng:35.24 },
+  { name:"Iran", flag:"🇮🇷", region:"Middle East", lat:32.42, lng:53.68 },
+  { name:"Iraq", flag:"🇮🇶", region:"Middle East", lat:33.22, lng:43.67 },
+  { name:"Saudi Arabia", flag:"🇸🇦", region:"Middle East", lat:23.88, lng:45.07 },
+  { name:"UAE", flag:"🇦🇪", region:"Middle East", lat:23.42, lng:53.84 },
+  { name:"Qatar", flag:"🇶🇦", region:"Middle East", lat:25.35, lng:51.18 },
+  { name:"Kuwait", flag:"🇰🇼", region:"Middle East", lat:29.31, lng:47.48 },
+  { name:"Bahrain", flag:"🇧🇭", region:"Middle East", lat:26.02, lng:50.55 },
+  { name:"Oman", flag:"🇴🇲", region:"Middle East", lat:21.51, lng:55.92 },
+  { name:"Jordan", flag:"🇯🇴", region:"Middle East", lat:30.58, lng:36.23 },
+  { name:"Lebanon", flag:"🇱🇧", region:"Middle East", lat:33.85, lng:35.86 },
+  { name:"Syria", flag:"🇸🇾", region:"Middle East", lat:34.80, lng:38.99 },
+  { name:"Israel", flag:"🇮🇱", region:"Middle East", lat:31.04, lng:34.85 },
+  { name:"Palestine", flag:"🇵🇸", region:"Middle East", lat:31.95, lng:35.23 },
+  { name:"Yemen", flag:"🇾🇪", region:"Middle East", lat:15.55, lng:48.51 },
+  // Africa
+  { name:"Nigeria", flag:"🇳🇬", region:"Africa", lat:9.08, lng:8.67 },
+  { name:"South Africa", flag:"🇿🇦", region:"Africa", lat:-30.55, lng:22.93 },
+  { name:"Egypt", flag:"🇪🇬", region:"Africa", lat:26.82, lng:30.80 },
+  { name:"Kenya", flag:"🇰🇪", region:"Africa", lat:-0.02, lng:37.90 },
+  { name:"Ghana", flag:"🇬🇭", region:"Africa", lat:7.95, lng:-1.02 },
+  { name:"Ethiopia", flag:"🇪🇹", region:"Africa", lat:9.14, lng:40.49 },
+  { name:"Tanzania", flag:"🇹🇿", region:"Africa", lat:-6.37, lng:34.88 },
+  { name:"Uganda", flag:"🇺🇬", region:"Africa", lat:1.37, lng:32.29 },
+  { name:"Morocco", flag:"🇲🇦", region:"Africa", lat:31.79, lng:-7.08 },
+  { name:"Algeria", flag:"🇩🇿", region:"Africa", lat:28.03, lng:1.65 },
+  { name:"Tunisia", flag:"🇹🇳", region:"Africa", lat:33.88, lng:9.53 },
+  { name:"Libya", flag:"🇱🇾", region:"Africa", lat:26.33, lng:17.22 },
+  { name:"Sudan", flag:"🇸🇩", region:"Africa", lat:12.86, lng:30.21 },
+  { name:"Senegal", flag:"🇸🇳", region:"Africa", lat:14.49, lng:-14.45 },
+  { name:"Cameroon", flag:"🇨🇲", region:"Africa", lat:3.84, lng:11.50 },
+  { name:"Ivory Coast", flag:"🇨🇮", region:"Africa", lat:7.53, lng:-5.54 },
+  { name:"Mozambique", flag:"🇲🇿", region:"Africa", lat:-18.66, lng:35.52 },
+  { name:"Madagascar", flag:"🇲🇬", region:"Africa", lat:-18.76, lng:46.86 },
+  { name:"Zimbabwe", flag:"🇿🇼", region:"Africa", lat:-19.01, lng:29.15 },
+  { name:"Zambia", flag:"🇿🇲", region:"Africa", lat:-13.13, lng:27.84 },
+  { name:"Rwanda", flag:"🇷🇼", region:"Africa", lat:-1.94, lng:29.87 },
+  { name:"Botswana", flag:"🇧🇼", region:"Africa", lat:-22.32, lng:24.68 },
+  { name:"Namibia", flag:"🇳🇦", region:"Africa", lat:-22.95, lng:18.49 },
+  { name:"Angola", flag:"🇦🇴", region:"Africa", lat:-11.20, lng:17.87 },
+  { name:"Mali", flag:"🇲🇱", region:"Africa", lat:17.57, lng:-3.99 },
+  { name:"Burkina Faso", flag:"🇧🇫", region:"Africa", lat:12.36, lng:-1.56 },
+  { name:"Niger", flag:"🇳🇪", region:"Africa", lat:17.60, lng:8.08 },
+  { name:"Chad", flag:"🇹🇩", region:"Africa", lat:15.45, lng:18.73 },
+  { name:"Somalia", flag:"🇸🇴", region:"Africa", lat:5.15, lng:46.19 },
+  { name:"Congo", flag:"🇨🇬", region:"Africa", lat:-0.22, lng:15.82 },
+  { name:"DR Congo", flag:"🇨🇩", region:"Africa", lat:-4.03, lng:21.75 },
+  // Oceania
+  { name:"Australia", flag:"🇦🇺", region:"Oceania", lat:-25.27, lng:133.77 },
+  { name:"New Zealand", flag:"🇳🇿", region:"Oceania", lat:-40.90, lng:174.88 },
+  { name:"Papua New Guinea", flag:"🇵🇬", region:"Oceania", lat:-6.31, lng:143.95 },
+  { name:"Fiji", flag:"🇫🇯", region:"Oceania", lat:-16.57, lng:179.41 },
+  { name:"Solomon Islands", flag:"🇸🇧", region:"Oceania", lat:-9.64, lng:160.15 },
+  { name:"Vanuatu", flag:"🇻🇺", region:"Oceania", lat:-15.37, lng:166.95 },
+  { name:"Samoa", flag:"🇼🇸", region:"Oceania", lat:-13.75, lng:-172.10 },
+  { name:"Tonga", flag:"🇹🇴", region:"Oceania", lat:-21.17, lng:-175.19 },
 ];
-
-// Global state
+ 
+// ─── GLOBAL STATE ────────────────────────────────────────────────
 window.nameData = {};
 window.selectedCountry = null;
 let selectedRegion = 'all';
 let map;
 const markers = {};
-
+ 
 function getTopNames(country, n = 10) {
   const data = window.nameData[country] || {};
   return Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, n);
 }
-
+ 
 function updateStats() {
   let total = 0, countries = 0;
   COUNTRIES.forEach(c => {
@@ -557,26 +650,25 @@ function updateStats() {
   });
   document.getElementById('totalNames').textContent = total.toLocaleString();
   document.getElementById('totalCountries').textContent = countries;
-
-  // Today count from localStorage
+ 
   const savedDate = localStorage.getItem('nw_date');
   const today = new Date().toDateString();
   const todayCount = savedDate === today ? (parseInt(localStorage.getItem('nw_today')) || 0) : 0;
   document.getElementById('todayCount').textContent = todayCount;
 }
-
-// SIDEBAR
+ 
+// ─── SIDEBAR ─────────────────────────────────────────────────────
 function renderSidebar(filter = '') {
   const list = document.getElementById('countryList');
   if (filter.length > 1) { renderSearch(filter, list); return; }
-
+ 
   const visible = COUNTRIES.filter(c => selectedRegion === 'all' || c.region === selectedRegion);
   list.innerHTML = visible.map(c => {
     const top = getTopNames(c.name, 5);
     const total = Object.values(window.nameData[c.name] || {}).reduce((a,b)=>a+b,0);
     const chips = top.map(([n], i) => `<span class="name-chip rank-${i+1}">${n}</span>`).join('');
     const sel = window.selectedCountry === c.name ? 'selected' : '';
-    return `<div class="country-card ${sel}" onclick="selectCountry('${c.name}')">
+    return `<div class="country-card ${sel}" onclick="selectCountry('${c.name.replace(/'/g,"\\'")}')">
       <div class="country-card-header">
         <span class="flag">${c.flag}</span>
         <span class="country-name">${c.name}</span>
@@ -586,7 +678,7 @@ function renderSidebar(filter = '') {
     </div>`;
   }).join('');
 }
-
+ 
 function renderSearch(q, list) {
   const lq = q.toLowerCase();
   const matchCountries = COUNTRIES.filter(c => c.name.toLowerCase().includes(lq));
@@ -599,14 +691,14 @@ function renderSearch(q, list) {
       }
     });
   });
-
+ 
   let html = '<div class="search-results">';
   if (!matchCountries.length && !Object.keys(grouped).length) {
     html += '<div class="no-results">No results found</div>';
   }
   matchCountries.forEach(c => {
     const top = getTopNames(c.name, 3).map(([n])=>n).join(', ') || 'No names yet';
-    html += `<div class="search-result-item" onclick="selectCountry('${c.name}')">
+    html += `<div class="search-result-item" onclick="selectCountry('${c.name.replace(/'/g,"\\'")}')">
       <div class="sr-name">${c.flag} ${c.name}</div>
       <div class="sr-locs">Top: ${top}</div>
     </div>`;
@@ -621,7 +713,7 @@ function renderSearch(q, list) {
   html += '</div>';
   list.innerHTML = html;
 }
-
+ 
 function filterRegion(region, btn) {
   selectedRegion = region;
   document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
@@ -629,9 +721,9 @@ function filterRegion(region, btn) {
   document.getElementById('searchInput').value = '';
   renderSidebar();
 }
-
+ 
 function handleSearch(val) { renderSidebar(val.trim()); }
-
+ 
 function selectCountry(name) {
   window.selectedCountry = name;
   renderSidebar(document.getElementById('searchInput').value.trim());
@@ -639,13 +731,13 @@ function selectCountry(name) {
   const c = COUNTRIES.find(x => x.name === name);
   if (c) map.setView([c.lat, c.lng], 5, { animate: true });
 }
-
+ 
 function showDetail(name) {
   const c = COUNTRIES.find(x => x.name === name);
   if (!c) return;
   const top = getTopNames(name, 10);
   const maxCount = top[0] ? top[0][1] : 1;
-
+ 
   document.getElementById('dpFlag').textContent = c.flag;
   document.getElementById('dpName').textContent = c.name;
   document.getElementById('dpList').innerHTML = top.length ? top.map(([n, count], i) => {
@@ -658,21 +750,21 @@ function showDetail(name) {
       <div class="rank-count">${count}</div>
     </li>`;
   }).join('') : '<li style="padding:1rem;color:#aaa;font-size:0.85rem">No names yet — be the first!</li>';
-
+ 
   document.getElementById('detailPanel').classList.add('visible');
 }
-
+ 
 function closeDetail() {
   document.getElementById('detailPanel').classList.remove('visible');
   window.selectedCountry = null;
   renderSidebar();
 }
-
-// MAP
+ 
+// ─── MAP ─────────────────────────────────────────────────────────
 function initMap() {
   map = L.map('map', { center: [20, 10], zoom: 2, zoomControl: true, attributionControl: false });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-
+ 
   COUNTRIES.forEach(c => {
     const icon = L.divIcon({
       className: '',
@@ -683,7 +775,7 @@ function initMap() {
     markers[c.name] = marker;
   });
 }
-
+ 
 function refreshMarkers() {
   COUNTRIES.forEach(c => {
     const top = getTopNames(c.name, 1);
@@ -698,12 +790,12 @@ function refreshMarkers() {
     }
   });
 }
-
-// MODAL
+ 
+// ─── MODAL ───────────────────────────────────────────────────────
 function openModal() {
   const sel = document.getElementById('countrySelect');
   if (!sel.options.length) {
-    COUNTRIES.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+    COUNTRIES.slice().sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.name;
       opt.textContent = `${c.flag} ${c.name}`;
@@ -712,29 +804,54 @@ function openModal() {
     });
   }
   document.getElementById('modalOverlay').classList.add('open');
+  updateCooldownBanner();
+  clearErrors();
 }
-
+ 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   document.getElementById('nameInput').value = '';
   document.getElementById('regionInput').value = '';
+  clearErrors();
 }
-
+ 
+function clearErrors() {
+  document.getElementById('nameError').classList.remove('visible');
+  document.getElementById('nameInput').classList.remove('error');
+}
+ 
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
-
+ 
+// ─── SUBMIT WITH ANTI-SPAM ───────────────────────────────────────
 async function submitName() {
-  const name = document.getElementById('nameInput').value.trim();
+  clearErrors();
+ 
+  // 1. Spam check
+  const spam = checkCooldown();
+  if (spam.blocked) {
+    updateCooldownBanner();
+    return;
+  }
+ 
+  // 2. Validate name
+  const raw = document.getElementById('nameInput').value.trim();
+  if (!raw || !NAME_REGEX.test(raw)) {
+    document.getElementById('nameError').classList.add('visible');
+    document.getElementById('nameInput').classList.add('error');
+    return;
+  }
+ 
+  // 3. Validate country
   const country = document.getElementById('countrySelect').value;
-  if (!name) { showToast('Please enter your name!'); return; }
   if (!country) { showToast('Please select a country!'); return; }
-
-  const cap = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+ 
+  const cap = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
-
+ 
   try {
     if (window._firebaseReady && window._db) {
       await window._addDoc(window._collection(window._db, "names"), {
@@ -744,44 +861,49 @@ async function submitName() {
         timestamp: new Date().toISOString()
       });
     } else {
-      // Fallback if Firebase not ready
       if (!window.nameData[country]) window.nameData[country] = {};
       window.nameData[country][cap] = (window.nameData[country][cap] || 0) + 1;
       updateStats();
       renderSidebar();
       refreshMarkers();
     }
-
-    // Update today count
+ 
+    // Record anti-spam state
+    recordSubmission();
+ 
+    // Update today counter
     const today = new Date().toDateString();
     const savedDate = localStorage.getItem('nw_date');
     const todayCount = savedDate === today ? (parseInt(localStorage.getItem('nw_today')) || 0) : 0;
     localStorage.setItem('nw_today', (todayCount + 1).toString());
     localStorage.setItem('nw_date', today);
     document.getElementById('todayCount').textContent = todayCount + 1;
-
+ 
     closeModal();
     showToast(`✅ "${cap}" added to ${country}!`);
   } catch (err) {
     showToast('Something went wrong, try again!');
     console.error(err);
+    btn.disabled = false;
   }
-
-  btn.disabled = false;
+ 
   btn.textContent = '🌍 Add My Name to the Map';
+  updateCooldownBanner();
 }
-
-function showToast(msg) {
+ 
+function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  t.classList.toggle('error-toast', isError);
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
-
-// INIT
+ 
+// ─── INIT ────────────────────────────────────────────────────────
 renderSidebar();
 initMap();
 updateStats();
 </script>
 </body>
 </html>
+ 
